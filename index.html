@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IntraArb Pro - بوت المراجحة الثلاثية Bybit</title>
+  <meta name="description" content="بوت المراجحة الثلاثية الفورية على منصة Bybit مع حماية رأس المال وحساب العمولات">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IntraArb Pro">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#10b981">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+    }
+    .glow-box {
+      animation: pulse-glow 3s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- App Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <svg class="w-6 h-6 text-slate-950 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-white">IntraArb <span class="text-emerald-400">Pro</span></h1>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">Bybit Spot v5</span>
+          </div>
+          <p class="text-xs text-slate-400">نظام المراجحة الثلاثية الآلي مع حماية رأس المال</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons & Badges -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Install PWA Button (Always accessible to install or guide) -->
+        <button id="installBtn" class="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl shadow-lg shadow-emerald-950/50 transition transform hover:scale-[1.02] active:scale-[0.98]">
+          <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span id="installBtnText">تنزيل كتطبيق ثابت 📲</span>
+        </button>
+
+        <!-- Auto-Pilot Badge -->
+        <button id="autoPilotToggleBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition">
+          <span id="autoPilotIcon">🤖</span>
+          <span id="autoPilotText">تداول يدوي</span>
+        </button>
+
+        <!-- Mode Badge -->
+        <div id="modeBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span>الوضع التجريبي الآمن (0% مخاطرة)</span>
+        </div>
+
+        <!-- Settings Button -->
+        <button id="openSettingsBtn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LIVE TICKER BAR -->
+  <div class="bg-slate-900/60 border-b border-slate-800 overflow-x-auto py-2 text-xs font-mono scrollbar-none">
+    <div id="tickerTape" class="max-w-7xl mx-auto px-4 flex items-center gap-6 whitespace-nowrap text-slate-300">
+      <div class="flex items-center gap-2 text-slate-400"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Bybit Spot Live:</div>
+      <div id="tickerBTC" class="flex items-center gap-1.5">BTC: <span class="text-white font-bold">--</span></div>
+      <div id="tickerETH" class="flex items-center gap-1.5">ETH: <span class="text-white font-bold">--</span></div>
+      <div id="tickerSOL" class="flex items-center gap-1.5">SOL: <span class="text-white font-bold">--</span></div>
+      <div id="tickerXRP" class="flex items-center gap-1.5">XRP: <span class="text-white font-bold">--</span></div>
+      <div id="tickerETHBTC" class="flex items-center gap-1.5">ETH/BTC: <span class="text-white font-bold">--</span></div>
+      <div id="pingStatus" class="mr-auto text-emerald-400 font-bold flex items-center gap-1">السيرفر: متصل ⚡</div>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
+
+    <!-- HERO / STATUS METRICS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Balance Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow">
+        <div class="text-xs text-slate-400 font-medium">الرصيد المخصص للتداول</div>
+        <div class="mt-1 flex items-baseline gap-2">
+          <span id="displayBalance" class="text-2xl font-black font-mono text-emerald-400">$1,000.00</span>
+          <span class="text-xs text-slate-400 font-mono">USDT</span>
+        </div>
+        <div id="balanceSource" class="mt-2 text-[11px] text-slate-500">رصيد تجريبي افتراضي (محاكاة)</div>
+      </div>
+
+      <!-- Scanned Triangles -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow">
+        <div class="text-xs text-slate-400 font-medium">المثلثات المفحوصة في الثانية</div>
+        <div class="mt-1 flex items-baseline gap-2">
+          <span id="scannedCount" class="text-2xl font-black font-mono text-cyan-400">20</span>
+          <span class="text-xs text-slate-400">مسار مراجحة</span>
+        </div>
+        <div class="mt-2 text-[11px] text-slate-500">فحص فوري كل 2 ثانية</div>
+      </div>
+
+      <!-- Net Threshold -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow">
+        <div class="text-xs text-slate-400 font-medium">الحد الأدنى للربح الصافي المطلوبة</div>
+        <div class="mt-1 flex items-baseline gap-2">
+          <span id="thresholdDisplay" class="text-2xl font-black font-mono text-amber-400">+0.80%</span>
+          <span class="text-xs text-slate-400">صافي بعد الرسوم</span>
+        </div>
+        <div class="mt-2 text-[11px] text-slate-500">خصم 0.3% عمولة Bybit الثلاثية</div>
+      </div>
+
+      <!-- Bot Control Switch -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400 font-medium">حالة الفحص الآلي</span>
+          <span id="scanIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <button id="toggleScanBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition shadow flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>الفحص نشط الآن</span>
+          </button>
+          <button id="emergencyStopBtn" title="توقف طوارئ فوري" class="bg-rose-950 hover:bg-rose-900 text-rose-400 border border-rose-800 font-bold p-2 rounded-xl text-xs transition">
+            🛑
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZERO-RISK SAFETY BANNER -->
+    <div class="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-cyan-950/40 border border-emerald-800/40 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg flex-shrink-0">
+          🛡️
+        </div>
+        <div>
+          <h3 class="font-bold text-white text-sm sm:text-base">ضمان الأمان وحماية الأموال (Zero-Risk Guarantee)</h3>
+          <p class="text-xs text-slate-300 mt-0.5">البوت يعمل حالياً في وضع "المحاكاة الآمنة" برصيد وهمي ($1,000). لن يتم إرسال أي أوامر حقيقية لأموالك حتى تختار ذلك بنفسك وتختبر النظام بالكامل.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="soundToggleBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+          <span id="soundIcon">🔔</span> تنبيه صوتي: <span id="soundStatusText" class="text-emerald-400 font-bold">مفعل</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STANDALONE APP INSTALL BANNER -->
+    <div id="installAppBanner" class="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/60 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-xl sm:text-2xl shadow-lg shadow-emerald-500/30 flex-shrink-0">
+          📲
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="font-bold text-white text-sm sm:text-base">تثبيت IntraArb Pro كتطبيق ثابت على التابلت والهاتف والكمبيوتر</h3>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">تطبيق مستقل PWA</span>
+          </div>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+            يعمل كتطبيق دائم ومستقل على شاشة التابلت اللوحي (أندرويد / آيباد) أو الهاتف والكمبيوتر بشاشة كاملة وبدون أشرطة متصفح مع تنبيهات صوتية فورية.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
+        <button id="bannerInstallBtn" class="flex-1 md:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 sm:px-5 rounded-xl text-xs sm:text-sm transition shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 whitespace-nowrap">
+          <span>⚡ تثبيت التطبيق الآن</span>
+        </button>
+        <a id="bannerDownloadDesktopBtn" href="/api/download-desktop-app" download="IntraArb-Pro-Desktop.bat" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 py-2.5 px-3.5 rounded-xl text-xs font-bold border border-cyan-500/30 transition flex items-center gap-1.5 whitespace-nowrap">
+          <span>💻 تنزيل لسطح المكتب (.bat)</span>
+        </a>
+        <button id="howToInstallBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 px-3.5 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1.5 whitespace-nowrap">
+          <span>📖 الخيارات وطريقة التثبيت</span>
+        </button>
+      </div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-lg font-bold border border-amber-500/30">
+            🎯
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-sm">درع حماية رأس المال (قواعد الصفقة الواحدة 1% مقابل اليوم التراكمي 24س)</h3>
+            <p class="text-[11px] text-slate-400">حماية الصفقة الفردية (1% ربح / 1% خسارة) + إغلاق آلي يومي عند ربح 10% أو خسارة 5% خلال 24 ساعة</p>
+          </div>
+        </div>
+        <!-- Live Risk Badge -->
+        <div id="riskStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 self-start sm:self-auto">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="riskStatusText">المحفظة في النطاق الآمن والطبيعي</span>
+        </div>
+      </div>
+
+      <!-- SECTION 1: PER-TRADE RULES (فرق 1% لكل صفقة) -->
+      <div class="bg-slate-950/60 border border-cyan-500/20 rounded-xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+            <span>⚡</span> المستوى الأول: محددات الصفقة الفردية الواحدة (Per-Trade 1% Rules)
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">فارق محكوم 1% للصفقة</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-slate-400 block text-[11px]">الربح المشروط لدخول الصفقة:</span>
+              <span class="text-slate-300 text-[10px]">لا يدخل البوت إلا إذا كان الربح الصافي:</span>
+            </div>
+            <div class="text-left">
+              <span id="tradeTargetProfitBadge" class="text-base font-bold font-mono text-emerald-400">≥ +1.0%</span>
+              <span class="text-[10px] text-emerald-500/80 block">صافي مؤكد بعد الرسوم</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-slate-400 block text-[11px]">أقصى انزلاق / خسارة للصفقة:</span>
+              <span class="text-slate-300 text-[10px]">قاطع دائرة فوري (Circuit Breaker):</span>
+            </div>
+            <div class="text-left">
+              <span id="tradeMaxLossBadge" class="text-base font-bold font-mono text-rose-400">≤ -1.0%</span>
+              <span class="text-[10px] text-rose-500/80 block">إلغاء فوري لمنع التعليق</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: DAILY 24-HOUR CUMULATIVE PORTFOLIO (خلال 24 ساعة: 10% ربح أو 5% خسارة يقفل آلياً) -->
+      <div class="space-y-3 pt-1">
+        <div class="flex items-center justify-between text-xs font-bold text-amber-400">
+          <span class="flex items-center gap-1.5">
+            <span>📅</span> المستوى الثاني: الإغلاق التراكمي التلقائي خلال 24 ساعة (Daily 24h Auto-Shutdown)
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">إغلاق آلي إجباري عند الهدف</span>
+        </div>
+
+        <!-- Shield Metrics Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-slate-400 block mb-1">رأس المال المعتمد</span>
+            <div class="flex items-baseline gap-1">
+              <span id="shieldBaseCapital" class="text-lg font-bold font-mono text-white">$1,000.00</span>
+              <span class="text-[10px] text-slate-500 font-mono">USDT</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-slate-400 block mb-1">صافي أرباح آخر 24 ساعة</span>
+            <div class="flex items-baseline gap-1">
+              <span id="shieldNetPnL" class="text-lg font-bold font-mono text-emerald-400">+$0.00</span>
+              <span id="shieldNetPnLPct" class="text-xs font-mono font-bold text-emerald-400">(+0.00%)</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span>إغلاق آلي عند ربح 24س</span>
+              <span class="text-emerald-400 font-bold">+10%</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span id="shieldTPAmount" class="text-sm font-mono text-emerald-400 font-bold">+$100.00</span>
+              <span class="text-[10px] text-slate-500">يقفل آلياً لتثبيت الربح</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span>إغلاق آلي عند خسارة 24س</span>
+              <span class="text-rose-400 font-bold">-5%</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span id="shieldSLAmount" class="text-sm font-mono text-rose-400 font-bold">-$50.00</span>
+              <span class="text-[10px] text-slate-500">يقفل آلياً + إنذار صوتي</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Progress Bars for 24h TP & SL -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <!-- 24h Profit Progress Bar -->
+          <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60 space-y-1.5">
+            <div class="flex justify-between text-[11px]">
+              <span class="text-slate-300 font-medium">التقدم نحو هدف الربح اليومي (+10% في 24س)</span>
+              <span id="tpProgressLabel" class="font-mono text-emerald-400 font-bold">0.0% / 10.0%</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="tpProgressBar" class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- 24h Stop Loss Risk Bar -->
+          <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60 space-y-1.5">
+            <div class="flex justify-between text-[11px]">
+              <span class="text-slate-300 font-medium">مؤشر مخاطر خسائر اليوم (يقفل إجبارياً عند -5%)</span>
+              <span id="slProgressLabel" class="font-mono text-slate-400 font-bold">0.0% / 5.0%</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="slProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-rose-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning Announcement Banner (Hidden by default, shows on warning or stop) -->
+      <div id="shieldAlarmBanner" class="hidden p-3 rounded-xl border flex items-center justify-between text-xs transition animate-pulse">
+        <div class="flex items-center gap-2.5">
+          <span id="shieldAlarmIcon" class="text-lg">⚠️</span>
+          <span id="shieldAlarmText" class="font-bold">تحذير</span>
+        </div>
+        <button id="dismissAlarmBannerBtn" class="text-[11px] px-2.5 py-1 bg-slate-800 rounded-lg hover:bg-slate-700 text-slate-300">إغلاق</button>
+      </div>
+    </div>
+
+    <!-- DETECTED ARBITRAGE OPPORTUNITIES SECTION -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-white">فرص المراجحة الثلاثية الحية (Live Triangle Radar)</h2>
+          <span id="oppsCountBadge" class="bg-slate-800 text-slate-300 text-xs font-mono px-2 py-0.5 rounded-full border border-slate-700">0 فرصة</span>
+        </div>
+        <div class="text-xs text-slate-400 flex items-center gap-1">
+          <span>آخر تحديث:</span>
+          <span id="lastUpdatedTime" class="font-mono text-slate-300">الآن</span>
+        </div>
+      </div>
+
+      <!-- Opportunities Container -->
+      <div id="opportunitiesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Will be dynamically populated -->
+        <div class="col-span-full bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+          <div class="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+          <p class="text-sm font-medium">جاري فحص دفاتر الطلبات وأزواج العملات في Bybit الآن...</p>
+          <p class="text-xs text-slate-500 mt-1">يتم البحث عن اختلالات سعرية لأكثر من 20 عملة رئيسية (BTC, ETH, SOL, XRP, DOGE, AVAX والمزيد)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRADE HISTORY & AUDIT LOG -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <h3 class="font-bold text-white text-sm">سجل الصفقات المنفذة (Trade Execution Log)</h3>
+          <span class="text-xs text-slate-500">حسابات دقيقة بالدولار والعمولة</span>
+        </div>
+        <button id="clearLogsBtn" class="text-xs text-slate-400 hover:text-slate-200">مسح السجل</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="py-3 px-4">الوقت</th>
+              <th class="py-3 px-4">مسار المثلث</th>
+              <th class="py-3 px-4">المبلغ المستثمر</th>
+              <th class="py-3 px-4">العمولة المخصومة (Bybit)</th>
+              <th class="py-3 px-4">صافي الربح ($)</th>
+              <th class="py-3 px-4">النسبة المئوية</th>
+              <th class="py-3 px-4">الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="tradeLogBody" class="divide-y divide-slate-800 text-slate-300 font-mono">
+            <tr class="text-center text-slate-500 py-6">
+              <td colspan="7" class="py-6">لم يتم تنفيذ أي صفقة بعد. عندما يجد البوت فرصة تتجاوز شرط الربح، ستظهر هنا فوراً.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 24/7 HOURLY PERFORMANCE REPORT SECTION -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg space-y-4 p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-lg font-bold border border-cyan-500/30">
+            📊
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-sm">تقرير العمليات والأرباح على مدار الساعة (24/7 Hourly Performance Matrix)</h3>
+            <p class="text-[11px] text-slate-400">تحليل تراكمي فوري لكل ساعة خلال الـ 24 ساعة الماضية لجميع صفقات المراجحة والعمولات</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="refreshReportBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl border border-slate-700 transition flex items-center gap-1">
+            <span>🔄</span> تحديث
+          </button>
+          <button id="exportReportCsvBtn" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 transition flex items-center gap-1 font-bold">
+            <span>📥</span> تصدير CSV
+          </button>
+          <button id="demoReportBtn" title="تعبئة بيانات تجريبية لرؤية مظهر التقرير التراكمي" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+            🎲 بيانات تجريبية
+          </button>
+        </div>
+      </div>
+
+      <!-- 24h Summary Metric Badges -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+          <span class="text-slate-400 block mb-1">إجمالي صفقات 24س</span>
+          <span id="reportTotalTrades" class="text-lg font-bold font-mono text-white">0</span>
+        </div>
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+          <span class="text-slate-400 block mb-1">نسبة النجاح (Win Rate)</span>
+          <span id="reportWinRate" class="text-lg font-bold font-mono text-emerald-400">100%</span>
+        </div>
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+          <span class="text-slate-400 block mb-1">صافي أرباح 24س ($)</span>
+          <span id="reportNetProfit" class="text-lg font-bold font-mono text-emerald-400">+$0.00</span>
+        </div>
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+          <span class="text-slate-400 block mb-1">العمولات المخصومة ($)</span>
+          <span id="reportTotalFees" class="text-lg font-bold font-mono text-rose-400">-$0.00</span>
+        </div>
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80 col-span-2 sm:col-span-1">
+          <span class="text-slate-400 block mb-1">أعلى ساعة ربحية</span>
+          <span id="reportBestHour" class="text-sm font-bold font-mono text-cyan-400">--:--</span>
+        </div>
+      </div>
+
+      <!-- Visual Hourly Timeline Bar Graph -->
+      <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800/60 space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>المخطط الزمني للأرباح عبر ساعات اليوم (Hourly PnL Distribution)</span>
+          <span class="text-[10px] text-slate-500">من أحدث ساعة (اليمين) إلى الأقدم (اليسار)</span>
+        </div>
+        <div id="hourlyBarsContainer" class="flex items-end gap-1.5 h-24 pt-2 overflow-x-auto scrollbar-none">
+          <!-- Dynamically populated bars -->
+          <div class="text-slate-500 text-xs w-full text-center py-6">جاري تحميل بيانات الساعات...</div>
+        </div>
+      </div>
+
+      <!-- Hourly Detailed Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">الساعة</th>
+              <th class="py-2.5 px-3">عدد العمليات</th>
+              <th class="py-2.5 px-3">رابحة / خاسرة</th>
+              <th class="py-2.5 px-3">حجم التداول</th>
+              <th class="py-2.5 px-3">العمولات المخصومة</th>
+              <th class="py-2.5 px-3">صافي الربح / الخسارة ($)</th>
+              <th class="py-2.5 px-3">المؤشر البصري</th>
+            </tr>
+          </thead>
+          <tbody id="hourlyReportTableBody" class="divide-y divide-slate-800/80 text-slate-300 font-mono">
+            <tr class="text-center text-slate-500">
+              <td colspan="7" class="py-4">لا توجد عمليات مسجلة خلال الساعات السابقة بعد.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MATHEMATICAL AUDIT & SAFETY REPORT -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
+      <h3 class="font-bold text-white text-sm flex items-center gap-2">
+        <span>📐</span> تقرير الشفافية الرياضية: كيف يضمن البوت عدم الخسارة؟
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+        <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          <div class="font-bold text-emerald-400 mb-1">1. الخصم المسبق للعمولة 0.3%</div>
+          <p class="text-slate-400 leading-relaxed">تتقاضى Bybit عمولة 0.1% على كل عملية. المراجحة تتكون من 3 عمليات، لذا يخصم البوت <code class="text-emerald-300">(1 - 0.001)³ = 0.997</code> قبل المقارنة، والربح المعروض هو صافٍ نقي 100%.</p>
+        </div>
+        <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          <div class="font-bold text-cyan-400 mb-1">2. حماية التنفيذ الفوري (IOC)</div>
+          <p class="text-slate-400 leading-relaxed">الأوامر تُرسل بصيغة Immediate-Or-Cancel. إذا تحرك السعر في جزء من الثانية ولم تجد السيولة المتوقعة، يلغى الطلب فوراً وتظل أموالك في محفظتك دون تعلق.</p>
+        </div>
+        <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          <div class="font-bold text-amber-400 mb-1">3. صلاحيات مفاتيح الـ API</div>
+          <p class="text-slate-400 leading-relaxed">عند الانتقال للتداول الحقيقي، تحتاج فقط لتفعيل صلاحية (Spot Trading). لا تفعل أبداً صلاحية السحب (Withdrawals)، وبذلك لا يمكن لأحد سحب سنت واحد من حسابك.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white">إعدادات البوت وإدارة المخاطر</h3>
+        <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <!-- Trading Mode Toggle -->
+        <div>
+          <label class="font-bold text-slate-300 block mb-1.5">وضع التداول:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="setSimModeBtn" class="py-2.5 px-3 rounded-xl border font-bold text-center transition bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
+              🛡️ تداول تجريبي (محاكاة)
+            </button>
+            <button id="setLiveModeBtn" class="py-2.5 px-3 rounded-xl border font-bold text-center transition bg-slate-800 text-slate-400 border-slate-700">
+              ⚡ تداول حقيقي (Live API)
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">الوضع التجريبي مجاني وآمن 100% ويحاكي السوق الحقيقي دون استخدام أموالك.</p>
+        </div>
+
+        <!-- Trade Amount -->
+        <div>
+          <label class="font-bold text-slate-300 block mb-1">حجم الصفقة (USDT):</label>
+          <input id="tradeAmountInput" type="number" value="100" min="10" max="5000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-emerald-500 outline-none">
+          <p class="text-[11px] text-slate-500 mt-0.5">المبلغ الموصى به للمراجحة السريعة: 100 إلى 500 USDT</p>
+        </div>
+
+        <!-- SECTION A: PER-TRADE SETTINGS (1% Rule) -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-cyan-400 text-xs flex items-center gap-1.5">
+              <span>⚡</span> إعدادات الصفقة الواحدة (فارق 1% لكل صفقة):
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">حماية فورية للصفقة</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1 text-[11px]">الربح المشروط للصفقة (%):</label>
+              <input id="minProfitInput" type="number" step="0.1" value="1.0" min="0.3" max="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-emerald-400 font-mono font-bold focus:border-emerald-500 outline-none">
+              <p class="text-[10px] text-slate-500 mt-0.5">لا يدخل البوت أي صفقة ربحها الصافي أقل من هذه النسبة (1% افتراضياً).</p>
+            </div>
+
+            <div>
+              <label class="text-slate-400 block mb-1 text-[11px]">أقصى خسارة/انزلاق للصفقة (%):</label>
+              <input id="maxLossTradeInput" type="number" step="0.1" value="1.0" min="0.2" max="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-rose-400 font-mono font-bold focus:border-rose-500 outline-none">
+              <p class="text-[10px] text-slate-500 mt-0.5">قاطع دائرة فوري: يمنع تجاوز خسارة الصفقة الواحدة عن 1%.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION B: 24-HOUR CUMULATIVE PORTFOLIO (10% TP / 5% SL) -->
+        <div class="border-t border-slate-800 pt-3 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-amber-400 text-xs flex items-center gap-1.5">
+              <span>📅</span> إدارة مخاطر اليوم التراكمي (خلال 24 ساعة):
+            </span>
+            <span class="text-[10px] text-emerald-400 font-mono">إغلاق آلي 10% / 5%</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1 text-[11px]">رأس المال الأساسي ($):</label>
+              <input id="initialCapitalInput" type="number" value="1000" min="10" max="100000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-mono focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1 text-[11px]">إغلاق آلي عند ربح 24س (%):</label>
+              <input id="takeProfitPctInput" type="number" step="0.5" value="10" min="1" max="100" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-emerald-400 font-mono font-bold focus:border-emerald-500 outline-none">
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1 text-[11px]">إغلاق آلي عند خسارة 24س (%):</label>
+              <input id="stopLossPctInput" type="number" step="0.5" value="5" min="1" max="50" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-rose-400 font-mono font-bold focus:border-rose-500 outline-none">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+            <input id="preWarningInput" type="checkbox" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-900 border-slate-700">
+            <label for="preWarningInput" class="text-[11px] text-slate-300">
+              إطلاق تحذير صوتي مسبق بصوت ناطق وسارينة إنذار عند اقتراب خسائر اليوم من 5% (بين 3% و 4.9%)
+            </label>
+          </div>
+        </div>
+
+        <!-- Bybit API Credentials (Optional) -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-300">مفاتيح Bybit API (اختياري - للتداول الحقيقي فقط):</span>
+            <span class="text-[10px] text-emerald-400 font-mono">مشفرة في المتصفح فقط</span>
+          </div>
+          <input id="apiKeyInput" type="text" placeholder="Bybit API Key" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none">
+          <input id="apiSecretInput" type="password" placeholder="Bybit API Secret" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 outline-none">
+          <button id="verifyKeysBtn" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-bold transition">
+            اختبار الاتصال بحساب Bybit
+          </button>
+          <div id="verifyStatus" class="text-xs text-center hidden"></div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex gap-2">
+        <button id="saveSettingsBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          حفظ الإعدادات
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTALL STANDALONE APP MODAL -->
+  <div id="installModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-5 sm:p-6 space-y-5 shadow-2xl my-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3.5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-xl shadow">
+            📲
+          </div>
+          <div>
+            <h3 class="font-bold text-base sm:text-lg text-white">تنزيل البوت كتطبيق ثابت على جهازك</h3>
+            <p class="text-xs text-slate-400">تطبيق مستقل (Progressive Web App) يعمل على كافة الأجهزة</p>
+          </div>
+        </div>
+        <button id="closeInstallModalBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm transition">✕</button>
+      </div>
+
+      <!-- App Status & Direct Action -->
+      <div class="bg-slate-950/80 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3 text-right w-full sm:w-auto">
+          <img src="/icon-192.png" alt="IntraArb Pro" class="w-12 h-12 rounded-xl shadow border border-slate-800 flex-shrink-0">
+          <div>
+            <div class="font-bold text-white text-sm">IntraArb Pro Arbitrage Bot</div>
+            <div id="installStatusText" class="text-xs text-emerald-400 mt-0.5">جاهز للتثبيت السريع كرمز مستقل</div>
+          </div>
+        </div>
+        <button id="modalDirectInstallBtn" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm transition shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2 whitespace-nowrap">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span id="modalDirectInstallBtnText">تثبيت الآن بنقرة واحدة</span>
+        </button>
+      </div>
+
+      <!-- Device Step-by-Step Instructions -->
+      <div class="space-y-3 text-xs">
+        <div class="font-bold text-slate-300 flex items-center gap-1.5">
+          <span>🛠️</span> خطوات التثبيت حسب نوع جهازك:
+        </div>
+
+        <!-- DIRECT APK CARD -->
+        <div class="bg-gradient-to-r from-emerald-950/60 via-slate-950/90 to-teal-950/60 border-2 border-emerald-500/50 rounded-2xl p-4 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📦</span>
+              <span class="font-bold text-white text-sm sm:text-base">تنزيل وتثبيت ملف الـ APK المباشر (Android / Tablet APK):</span>
+            </div>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2.5 py-1 rounded-full border border-emerald-500/40">ملف تثبيت APK رسمي</span>
+          </div>
+
+          <div class="text-slate-300 text-xs leading-relaxed space-y-2.5">
+            <p class="text-slate-200">
+              لتنزيل ملف <strong>APK</strong> المباشر لتثبيته على التابلت أو هاتف أندرويد:
+            </p>
+
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2 font-sans">
+              <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                <span>1️⃣</span> طريقة تحميل ملف الـ APK من المنصة:
+              </div>
+              <p class="text-slate-300 pr-5">
+                • في شريط منصة <strong>Google AI Studio</strong> بالأعلى (أعلى شاشة المحادثة الحالية)، انقر على قائمة <strong>⚙️ الإعدادات (Settings)</strong> أو قائمة الخيارات <strong>(⋮ / Export)</strong>.<br>
+                • اختر <strong>«Download APK»</strong> أو <strong>«Generate APK»</strong>.<br>
+                • سيقوم الخادم السحابي فوراً ببناء ملف الـ <strong>APK</strong> الكامل وتنزيله إلى جهازك.
+              </p>
+
+              <div class="font-bold text-cyan-400 flex items-center gap-1.5 pt-1">
+                <span>2️⃣</span> خطوات التثبيت على جهاز التابلت:
+              </div>
+              <p class="text-slate-300 pr-5">
+                • بعد اكتمال تنزيل ملف الـ <strong>APK</strong>، افتحه من قائمة الإشعارات أو من تطبيق <strong>«ملفاتي / My Files»</strong> على التابلت.<br>
+                • اضغط على <strong>«تثبيت» (Install)</strong>.<br>
+                • (إذا ظهرت رسالة أمان: اضغط على <em>«الإعدادات»</em> ثم فعّل <em>«السماح بتثبيت التطبيقات من هذا المصدر»</em>).<br>
+                • سيتم تثبيت التطبيق رسمياً ويظهر في قائمة تطبيقات التابلت.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tablet Dedicated Guide -->
+        <div class="bg-gradient-to-r from-emerald-950/40 via-slate-950/80 to-cyan-950/40 border border-emerald-500/40 rounded-xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs sm:text-sm">
+              <span>📱</span> التثبيت المباشر على أجهزة التابلت واللوحيات (Tablet & iPad):
+            </span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">مُوصى به لشاشات التابلت</span>
+          </div>
+          
+          <div class="space-y-2 text-[11px] text-slate-300 leading-relaxed">
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="font-bold text-cyan-300 block mb-1">1. إذا كان التابلت بنظام أندرويد (مثل Samsung Galaxy Tab أو Lenovo أو Xiaomi Pad):</span>
+              • افتح الرابط في متصفح <strong>Google Chrome</strong> أو <strong>Samsung Internet</strong> على التابلت.<br>
+              • انقر على زر <strong class="text-emerald-300">"تثبيت الآن بنقرة واحدة"</strong> بالأعلى إن كان متاحاً.<br>
+              • أو اضغط على قائمة الثلاث نقاط <strong class="text-white">(⋮)</strong> في شريط المتصفح، واختر <strong class="text-emerald-300">«تثبيت التطبيق» (Install app)</strong> أو <strong class="text-emerald-300">«إضافة إلى الشاشة الرئيسية»</strong>.<br>
+              • سينزل فوراً كأيقونة تطبيق كاملة في شاشة التابلت مع تطبيقاتك الأخرى، ويفتح بشاشة كاملة وبدون متصفح.
+            </div>
+
+            <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+              <span class="font-bold text-amber-300 block mb-1">2. إذا كان جهازك iPad (نظام Apple iPadOS):</span>
+              • افتح الرابط في متصفح <strong>Safari</strong>.<br>
+              • اضغط على زر المشاركة <strong class="text-white">([↑] Share)</strong> الموجود بجوار شريط العنوان بالأعلى.<br>
+              • اختر <strong class="text-cyan-300">«إضافة إلى الشاشة الرئيسية» ➕ (Add to Home Screen)</strong> ثم اضغط <strong>«إضافة» (Add)</strong>.<br>
+              • سيتحول التابلت مباشرة لاستخدام البوت كتطبيق مستقل بشاشة واسعة ومريحة.
+            </div>
+          </div>
+        </div>
+
+        <!-- Android Mobile Guide -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-400 flex items-center gap-1.5">
+              <span>🤖</span> هواتف أندرويد الذكية (Google Chrome):
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">Android Phone</span>
+          </div>
+          <p class="text-slate-300 leading-relaxed text-[11px]">
+            اضغط على زر القائمة <strong class="text-white">(الثلاث نقاط ⋮)</strong> في متصفح Chrome ➔ اختر <strong class="text-emerald-300">"تثبيت التطبيق"</strong> ➔ سيضاف فوراً على هاتفك.
+          </p>
+        </div>
+
+        <!-- iOS Mobile Guide -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+              <span>🍏</span> هواتف آيفون (Safari):
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono">iPhone iOS</span>
+          </div>
+          <p class="text-slate-300 leading-relaxed text-[11px]">
+            في Safari اضغط زر المشاركة <strong class="text-white">([↑] Share)</strong> بالأسفل ➔ اختر <strong class="text-cyan-300">"إضافة إلى الشاشة الرئيسية" ➕</strong>.
+          </p>
+        </div>
+
+        <!-- Desktop Guide & Direct Windows App Download -->
+        <div class="bg-slate-950/60 border border-amber-500/30 rounded-xl p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-amber-400 flex items-center gap-1.5">
+              <span>💻</span> تنزيل تطبيق سطح المكتب للكمبيوتر (Windows PC):
+            </span>
+            <span class="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-500/30">ملف تنفيذي مباشر</span>
+          </div>
+
+          <p class="text-slate-300 leading-relaxed text-[11px]">
+            إذا كنت تريد تشغيل البوت <strong>كتطبيق حقيقي مستقل على سطح المكتب</strong> (بدون فتح المتصفح، وبدون شريط عنوان، وبدون تبويبات):
+          </p>
+
+          <!-- Direct Download Buttons for Windows -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <a href="/api/download-desktop-app" download="IntraArb-Pro-Desktop.bat" class="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black p-2.5 rounded-xl text-center text-xs transition shadow flex items-center justify-center gap-1.5">
+              <span>📥 تحميل ملف تشغيل التطبيق (.bat)</span>
+            </a>
+            <a href="/api/download-windows-installer" download="Install-IntraArb-Desktop.cmd" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold p-2.5 rounded-xl text-center text-xs transition shadow flex items-center justify-center gap-1.5">
+              <span>⚡ تثبيت أيقونة التطبيق على سطح المكتب</span>
+            </a>
+          </div>
+
+          <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800 text-[11px] text-slate-300 space-y-1">
+            <div class="text-emerald-400 font-bold">💡 كيفية الاستخدام بعد التحميل:</div>
+            <div>• احفظ الملف مباشرة على <strong>سطح المكتب (Desktop)</strong>.</div>
+            <div>• انقر عليه مرتين <strong>(Double Click)</strong>، وسيفتح البوت فوراً في نافذة تطبيق مستقلة خاصة به مثل أي برنامج كمبيوتر عادي تماماً.</div>
+            <div>• يمكنك أيضاً النقر بزر الماوس الأيمن عليه واختيار <strong>Pin to taskbar</strong> لتثبيته في شريط المهام بالأسفل.</div>
+          </div>
+
+          <!-- Chrome/Edge System PWA Install option -->
+          <div class="border-t border-slate-800/80 pt-2 text-[11px] text-slate-400">
+            <span class="text-slate-200 font-bold">أو التثبيت عبر المتصفح:</span> في متصفح Chrome أو Edge اضغط على أيقونة التثبيت <strong class="text-white">🖥️</strong> الموجودة في شريط الرابط بالأعلى أو من القائمة <strong>(⋮) ➔ «تثبيت IntraArb Pro»</strong> ليتم إدراجه في قائمة ابدأ وبرامج ويندوز.
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Link Copy for In-App Browsers -->
+      <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div class="text-[11px] text-slate-400 w-full sm:w-auto">
+          إذا كنت تتصفح من داخل تطبيق (مثل تيليجرام أو واتساب)، انسخ الرابط وافتحه في المتصفح الرئيسي:
+        </div>
+        <button id="copyAppUrlBtn" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-700 transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <span>📋 نسخ الرابط</span>
+        </button>
+      </div>
+
+      <!-- Close Button -->
+      <div class="border-t border-slate-800 pt-3 flex justify-end">
+        <button id="dismissInstallModalBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-5 rounded-xl text-xs transition">
+          إغلاق
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
